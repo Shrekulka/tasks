@@ -8,6 +8,9 @@ from pprint import pprint
 import os
 import requests
 from bs4 import BeautifulSoup
+from requests.exceptions import RequestException
+from django.db import Error as DjangoDBError
+
 from load_django import *
 from parser_app.models import Product
 from utils import clean_text, clean_price
@@ -47,7 +50,11 @@ def get_value_by_label(scope, label_text, tag_with_label="span", tag_with_value=
 
 
 def parse_product():
-    response = requests.get(URL, headers=headers, cookies=cookies, timeout=15)
+    try:
+        response = requests.get(URL, headers=headers, cookies=cookies, timeout=15)
+    except RequestException as e:
+        print(f"❌ Network error while requesting the page: {e}")
+        return
 
     if response.status_code != 200:
         print(f"Request failed with status code: {response.status_code}")
@@ -56,29 +63,40 @@ def parse_product():
     soup = BeautifulSoup(response.text, "lxml")
     product = {}
 
-    # Find the specifications container once and reuse it for label-based searches
-    specs_container = soup.find(id="br-characteristics") or soup.find(class_="br-characteristics-wrapper")
+    # Specifications container class/id selected manually: opened this exact
+    # product page in DevTools, inspected the tab element by hand, then
+    # cross-checked by running a standalone diagnostic script against the
+    # live page that printed soup.find(id=...) vs soup.find(class_=...) and
+    # compared them with `is` (object identity), not just equal text — the
+    # printed output confirmed both point to the same single <div> on this
+    # page. id is used alone in the real code because HTML ids are
+    # guaranteed unique on a page, whereas the class name could in theory
+    # match another unrelated element elsewhere on the page.
+    specs_container = soup.find(id="br-characteristics")
 
     try:
         product["title"] = clean_text(soup.find("h1", class_="desktop-only-title").text)
     except AttributeError:
         product["title"] = None
 
-    # Collecting the promo price (promo_price) — flat block
+    # Find the promo-price element once and reuse it for both promo_price and price
     try:
         red_price_elem = soup.find("span", class_="red-price")
+    except AttributeError:
+        red_price_elem = None
+
+    # Collecting the promo price (promo_price)
+    try:
         product["promo_price"] = clean_price(red_price_elem.text) if red_price_elem else None
     except AttributeError:
         product["promo_price"] = None
 
-    # Collecting the regular price (price) — flat block
+    # Collecting the regular price (price)
     try:
-        if soup.find("span", class_="red-price"):
-            # If there is a promo, the regular price is in the old block (.br-pr-op)
+        if red_price_elem:
             old_price_block = soup.find("div", class_="br-pr-op")
             product["price"] = clean_price(old_price_block.text) if old_price_block else None
         else:
-            # If there is no promo, the price is in .price-wrapper
             price_wrapper = soup.find("div", class_="price-wrapper")
             price_span = price_wrapper.find("span") if price_wrapper else None
             product["price"] = clean_price(price_span.text) if price_span else None
@@ -126,15 +144,27 @@ def parse_product():
     product["screen_resolution"] = get_value_by_label(specs_container, "Роздільна здатність")
 
     try:
-        gallery = soup.find("div", class_="br-pic-block") or soup.find("div", class_="main-pictures-block")
+        gallery = soup.find("div", class_="br-pic-block")
         image_urls = []
         if gallery:
             for img in gallery.find_all("img"):
                 src = img.get("src") or img.get("data-src") or img.get("data-lazy")
-                if src:
-                    if src.startswith("/"):
-                        src = "https://brain.com.ua" + src
-                    image_urls.append(src)
+                if not src:
+                    continue
+                # Discovered by hand, not assumed: printed every img src found
+                # inside this exact gallery block for a real product page and
+                # noticed photos belonging to a DIFFERENT color variant of a
+                # similar product were mixed in — i.e. this carousel block can
+                # hold images for MULTIPLE product variants at once. Re-ran
+                # the same print on 2_get_by_selenium.py / 3_get_by_playwright.py
+                # to confirm the pattern was consistent, not a one-off. The one
+                # marker present in every filename that belongs to THIS
+                # product — both full-size and thumbnail — is the product_code.
+                if product.get("product_code") and product["product_code"] not in src:
+                    continue
+                if src.startswith("/"):
+                    src = "https://brain.com.ua" + src
+                image_urls.append(src)
         unique_urls = list(dict.fromkeys(image_urls))
         product["image_urls"] = unique_urls if unique_urls else None
     except AttributeError:
@@ -160,17 +190,20 @@ def parse_product():
     pprint(product)
 
     link = product.pop("link")
+    try:
+        # Two-step save per project convention (Сбор данных страницы.docx / Models.docx):
+        # 1) get_or_create with ONLY the unique field, no defaults, no other data;
+        # 2) enrich the object via plain attribute assignment + save().
+        obj, created = Product.objects.get_or_create(link=link)
+        for key, value in product.items():
+            setattr(obj, key, value)
+        obj.save()
+    except DjangoDBError as e:
+        print(f"❌ Database error while saving the product: {e}")
+        return
 
-    # Two-step save per project convention (Сбор данных страницы.docx / Models.docx):
-    # 1) get_or_create with ONLY the unique field, no defaults, no other data;
-    # 2) enrich the object via plain attribute assignment + save().
-    obj, created = Product.objects.get_or_create(link=link)
-    for key, value in product.items():
-        setattr(obj, key, value)
-    obj.save()
     print("✅ Created new record in Database" if created else "🔁 Updated existing record in Database")
 
 
 if __name__ == "__main__":
     parse_product()
-

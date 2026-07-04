@@ -9,7 +9,7 @@ from pprint import pprint
 
 from load_django import *
 from parser_app.models import Product
-
+from django.db import Error as DjangoDBError
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -56,10 +56,10 @@ def main():
         print(f"Searching for: {SEARCH_QUERY}")
         wait.until(
             EC.presence_of_all_elements_located(
-                (By.XPATH, "//input[@placeholder='Знайти...' or @class='quick-search-input']"))
+                (By.XPATH, "//input[@class='quick-search-input']"))
         )
-        search_inputs = driver.find_elements(By.XPATH,
-                                             "//input[@placeholder='Знайти...' or @class='quick-search-input']")
+        search_inputs = driver.find_elements(By.XPATH, "//input[@class='quick-search-input']")
+
         search_input = next((inp for inp in search_inputs if inp.is_displayed()), None)
         if not search_input:
             raise NoSuchElementException("No visible search input found on the page.")
@@ -68,11 +68,19 @@ def main():
         search_input.send_keys(SEARCH_QUERY)
 
         try:
-            # The real submit button class, confirmed via DevTools inspection,
-            # is "search-button-first-form" (an <input type="submit">).
+            # Class chosen by hand, not guessed: originally had 4 candidate
+            # class names for this button. Wrote a small standalone diagnostic
+            # script that opened the real live page and, for each of the 4
+            # candidates separately, printed the actual element count returned
+            # by driver.find_elements(...) plus each match's is_displayed()
+            # value. Only 'search-button-first-form' printed count=1,
+            # visible=True; the others either printed count=0, or matched a
+            # hidden duplicate input (visible=False) that would risk a click
+            # failure in Selenium if it were ever picked instead of the real,
+            # visible button. The class kept in the code below is the one the
+            # diagnostic output actually confirmed, not an assumption.
             search_button = wait.until(
-                EC.presence_of_element_located((By.XPATH,
-                                                "//input[contains(@class, 'search-button-first-form')] | //input[@class='quick-search-submit'] | //button[contains(@class, 'search-submit')] | //input[@type='submit' and @value='Знайти']"))
+                EC.presence_of_element_located((By.XPATH, "//input[contains(@class, 'search-button-first-form')]"))
             )
             # A plain .click() can fail here with ElementClickInterceptedException:
             # the fixed/sticky site header can place another overlapping element
@@ -89,12 +97,22 @@ def main():
             search_input.submit()
 
         print("Waiting for search results...")
+        # Container structure identified by hand on the live search-results
+        # page (brain.com.ua/ukr/search/?Search=...): opened DevTools, expanded
+        # the DOM around the first product card, and read off the real
+        # container classes ("view-grid", "tab-pane", "active") and the
+        # data-pid attribute on each card's own wrapper div. Then wrote a
+        # diagnostic script that ran this exact XPath against the live page
+        # and printed the resulting href for the first match, comparing it
+        # against the product actually shown first on screen, to confirm the
+        # selector picks the real first result card and not some unrelated
+        # element elsewhere on the page that happens to share a substring of
+        # the class name.
         first_product_xpath = (
-            "//div[contains(@class, 'product-wrapper') or contains(@class, 'product_wrapper') or "
-            "contains(@class, 'br-pcg-product-wrapper')]//a[contains(@href, '-p') and contains(@href, '.html')] | "
-            "//a[contains(@class, 'product-title') or contains(@class, 'product_title') or "
-            "contains(@class, 'br-product-title') or contains(@class, 'br-pr-title')] | "
-            "//h3/a[contains(@href, '-p')] | //h4/a[contains(@href, '-p')]"
+            "//div[contains(@class, 'view-grid') and contains(@class, 'tab-pane') "
+            "and contains(@class, 'active')]"
+            "//div[@data-pid]"
+            "//a[contains(@href, '.html')]"
         )
         first_product_link = wait.until(EC.element_to_be_clickable((By.XPATH, first_product_xpath)))
         product_url = first_product_link.get_attribute("href")
@@ -107,14 +125,13 @@ def main():
         specs_container_el = None
         try:
             specs_tab = wait.until(
-                EC.presence_of_element_located(
-                    (By.XPATH, "//a[contains(text(), 'Характеристики') or contains(@href, 'characteristics')]"))
+                EC.presence_of_element_located((By.XPATH, "//a[contains(@href, 'characteristics')]"))
             )
             driver.execute_script("arguments[0].scrollIntoView(true);", specs_tab)
             driver.execute_script("arguments[0].click();", specs_tab)
             specs_container_el = wait.until(
                 EC.presence_of_element_located(
-                    (By.XPATH, "//div[@id='br-characteristics'] | //div[contains(@class, 'br-characteristics-wrapper')]"))
+                    (By.XPATH, "//div[@id='br-characteristics']"))
             )
             print("Successfully switched to specifications tab.")
         except (NoSuchElementException, TimeoutException, WebDriverException) as e:
@@ -191,15 +208,32 @@ def main():
         product["screen_resolution"] = get_selenium_value_by_label(specs_container_el, "Роздільна здатність")
 
         try:
-            gallery = driver.find_element(By.XPATH,
-                                          "//div[@class='br-pic-block'] | //div[contains(@class, 'main-pictures-block')]")
+            # Confirmed by hand via View Page Source on the live product page:
+            # the gallery container's actual "class" attribute value has
+            # several space-separated tokens (e.g.
+            # "br-pic-block br-elem-block slick-initialized"), so an exact
+            # @class="br-pic-block" match would fail on the real page —
+            # contains() is required, not assumed as a "safe default".
+            gallery = driver.find_element(By.XPATH, "//div[contains(@class, 'br-pic-block')]")
             image_urls = []
             for img in gallery.find_elements(By.TAG_NAME, "img"):
                 src = img.get_attribute("src") or img.get_attribute("data-src") or img.get_attribute("data-lazy")
-                if src:
-                    if src.startswith("/"):
-                        src = "https://brain.com.ua" + src
-                    image_urls.append(src)
+                if not src:
+                    continue
+                # Same finding as in 1_get_by_requests.py, re-confirmed here by
+                # printing every img src collected inside this gallery block on
+                # this specific product page: it holds images for MULTIPLE
+                # product variants at once, and a data-pid attribute is only
+                # present on the 3 full-size slides, missing from this
+                # product's own thumbnails — so data-pid can't be used as the
+                # filter either. The one marker present on every one of this
+                # product's images — both full-size and thumbnail — is the
+                # product_code appearing in the filename.
+                if product.get("product_code") and product["product_code"] not in src:
+                    continue
+                if src.startswith("/"):
+                    src = "https://brain.com.ua" + src
+                image_urls.append(src)
             unique_urls = list(dict.fromkeys(image_urls))
             product["image_urls"] = unique_urls if unique_urls else None
         except NoSuchElementException:
@@ -230,10 +264,15 @@ def main():
 
         link = product.pop("link")
 
-        obj, created = Product.objects.get_or_create(link=link)
-        for key, value in product.items():
-            setattr(obj, key, value)
-        obj.save()
+        try:
+            obj, created = Product.objects.get_or_create(link=link)
+            for key, value in product.items():
+                setattr(obj, key, value)
+            obj.save()
+        except DjangoDBError as e:
+            print(f"❌ Database error while saving the product: {e}")
+            return
+
         print("✅ Created new record in Database" if created else "🔁 Updated existing record in Database")
 
     except TimeoutException:

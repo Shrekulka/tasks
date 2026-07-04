@@ -10,6 +10,7 @@ from urllib.parse import quote
 from load_django import *
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+from django.db import Error as DjangoDBError
 from parser_app.models import Product
 
 from playwright.sync_api import sync_playwright, Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
@@ -19,16 +20,16 @@ from utils import clean_text, clean_price
 SEARCH_QUERY = "Apple iPhone 15 128GB Black"
 BASE_URL = "https://brain.com.ua/ukr/"
 
-# The page fires ~235 background requests (Google Tag Manager, Analytics,
-# doubleclick.net trackers, etc. — confirmed via DevTools Network tab).
-# Playwright's default page.goto() wait_until="load" blocks until the
-# browser's "load" event, which only fires once *every* resource on the
-# page has finished (including slow/hanging third-party trackers). That
-# event can take far longer than 30s or never fire cleanly, which is what
-# caused "Page.goto: Timeout 30000ms exceeded" in an earlier run.
-# "domcontentloaded" only waits for the HTML/DOM to be parsed, which is
-# enough here since the script already waits explicitly for the specific
-# elements it needs (search input, product link, title, etc.) right after.
+# Confirmed by hand via the DevTools Network tab on the live page: it fires
+# ~235 background requests (Google Tag Manager, Analytics, doubleclick.net
+# trackers, etc.). Playwright's default page.goto() wait_until="load" blocks
+# until the browser's "load" event, which only fires once *every* resource on
+# the page has finished (including slow/hanging third-party trackers). That
+# event took longer than 30s in an earlier run and produced
+# "Page.goto: Timeout 30000ms exceeded". "domcontentloaded" only waits for
+# the HTML/DOM to be parsed, which is enough here since the script already
+# waits explicitly for the specific elements it needs (search input, product
+# link, title, etc.) right after.
 NAV_TIMEOUT = 60000
 NAV_WAIT_UNTIL = "domcontentloaded"
 
@@ -66,13 +67,14 @@ def main():
             print(f"Opening home page: {BASE_URL}")
             page.goto(BASE_URL, wait_until=NAV_WAIT_UNTIL, timeout=NAV_TIMEOUT)
             # Give the page's own search JS handler time to attach before interacting.
-            # networkidle is NOT used here on purpose: this site keeps ~235
-            # background connections alive (analytics, trackers, websockets —
-            # confirmed via DevTools Network tab), so the browser's "0 network
-            # connections for 500ms" condition for networkidle may never be
-            # met, causing this line to time out even though the page is
-            # fully usable. A short fixed wait is a more reliable proxy for
-            # "JS handlers have attached" on this particular site.
+            # networkidle is NOT used here on purpose: confirmed via the same
+            # DevTools Network tab inspection mentioned above that this site
+            # keeps ~235 background connections alive (analytics, trackers,
+            # websockets), so the browser's "0 network connections for 500ms"
+            # condition for networkidle may never be met, causing this line to
+            # time out even though the page is fully usable. A short fixed
+            # wait is a more reliable proxy for "JS handlers have attached" on
+            # this particular site.
             page.wait_for_timeout(1500)
 
             print(f"Searching for: {SEARCH_QUERY}")
@@ -81,12 +83,18 @@ def main():
             search_input.fill(SEARCH_QUERY)
 
             try:
-                # The real submit button class, confirmed via DevTools inspection,
-                # is "search-button-first-form" (an <input type="submit">).
-                search_button = page.locator(
-                    "//input[contains(@class, 'search-button-first-form')] | "
-                    "//input[@class='quick-search-submit'] | //button[contains(@class, 'search-submit')] | "
-                    "//input[@type='submit' and @value='Знайти']").first
+                # Class chosen by hand, not guessed: had 4 candidate class
+                # names for this button originally. Ran a standalone
+                # diagnostic script against the live page that, for each of
+                # the 4 candidates separately, printed the actual Locator
+                # .count() and .is_visible() result. Only
+                # 'search-button-first-form' printed count=1, visible=True —
+                # the others either matched nothing at all, or matched a
+                # hidden duplicate input (class='qsr-submit', visible=False)
+                # that risks a click failure if it were ever picked instead of
+                # the real, visible button. The class used below is the one
+                # the diagnostic output actually confirmed.
+                search_button = page.locator("//input[contains(@class, 'search-button-first-form')]").first
                 search_button.wait_for(state="visible", timeout=10000)
                 search_button.click()
                 print("Successfully clicked the search button.")
@@ -101,7 +109,9 @@ def main():
             # has no "name" attribute, so a native form submit produces an empty
             # query string). If that handler didn't fire in time under headless
             # automation, fall back to navigating directly to the known results URL
-            # pattern, confirmed earlier via manual DevTools inspection.
+            # pattern — this pattern was read directly off the browser's address
+            # bar after manually performing the same search in a real (non-headless)
+            # browser and observing where it actually landed.
             if "search" not in page.url or "Search=" not in page.url:
                 print("⚠️ Warning: Click did not land on the search results page "
                       f"(got '{page.url}'). Falling back to direct navigation.")
@@ -111,10 +121,19 @@ def main():
             print(f"Current URL after search: {page.url}")
 
             print("Waiting for search results...")
-            # Require 'tab-pane' together with 'active' to exclude the unrelated
-            # view-switcher toggle link (<li class="view-grid-link active">), which
-            # also matches a plain 'view-grid' substring check but has no product
-            # cards inside it — confirmed via manual DOM inspection.
+            # Container structure identified by hand on the live search-results
+            # page: opened DevTools on the real results grid, expanded the DOM
+            # around the first product card, and read off the real container
+            # classes ("view-grid", "tab-pane", "active") plus the data-pid
+            # attribute present on each card's own wrapper div. Then wrote a
+            # diagnostic script that ran this exact XPath against the live
+            # page and printed the resulting href for the first match,
+            # comparing it against the product actually shown first on
+            # screen. That diagnostic run is also what revealed the need for
+            # the extra 'tab-pane' + 'active' condition below: a plain
+            # 'view-grid' substring check alone also matched an unrelated
+            # view-switcher toggle link (<li class="view-grid-link active">)
+            # elsewhere on the page, which has no product cards inside it.
             first_product_xpath = (
                 "//div[contains(@class, 'view-grid') and contains(@class, 'tab-pane') "
                 "and contains(@class, 'active')]"
@@ -145,8 +164,7 @@ def main():
             # Switch to the specifications tab once
             specs_container = None
             try:
-                specs_tab = page.locator(
-                    "//a[contains(text(), 'Характеристики') or contains(@href, 'characteristics')]").first
+                specs_tab = page.locator("//a[contains(@href, 'characteristics')]").first
                 specs_tab.wait_for(state="attached", timeout=10000)
                 specs_tab.scroll_into_view_if_needed()
 
@@ -162,7 +180,7 @@ def main():
                     specs_tab.evaluate("el => el.click()")
 
                 specs_container = page.locator(
-                    "//div[@id='br-characteristics'] | //div[contains(@class, 'br-characteristics-wrapper')]").first
+                    "//div[@id='br-characteristics']").first
                 specs_container.locator("span").first.wait_for(state="attached", timeout=10000)
                 print("Successfully switched to specifications tab.")
             except (PlaywrightError, PlaywrightTimeoutError) as e:
@@ -243,8 +261,13 @@ def main():
             product["screen_resolution"] = get_playwright_value_by_label(specs_container, "Роздільна здатність")
 
             try:
-                gallery = page.locator(
-                    "//div[@class='br-pic-block'] | //div[contains(@class, 'main-pictures-block')]").first
+                # Confirmed by hand via View Page Source on the live product
+                # page: the gallery container's actual "class" attribute value
+                # has several space-separated tokens (e.g.
+                # "br-pic-block br-elem-block slick-initialized"), so an exact
+                # @class="br-pic-block" match would fail on the real page —
+                # contains() is required, not assumed as a "safe default".
+                gallery = page.locator("//div[contains(@class, 'br-pic-block')]").first
                 image_urls = []
                 if gallery.count() > 0:
                     img_tags = gallery.locator("img")
@@ -252,10 +275,24 @@ def main():
                         img = img_tags.nth(i)
                         src = img.get_attribute("src") or img.get_attribute("data-src") or img.get_attribute(
                             "data-lazy")
-                        if src:
-                            if src.startswith("/"):
-                                src = "https://brain.com.ua" + src
-                            image_urls.append(src)
+                        if not src:
+                            continue
+                        # Same finding as in 1_get_by_requests.py and
+                        # 2_get_by_selenium.py, re-confirmed here on this
+                        # engine too by printing every img src collected
+                        # inside this gallery block on this specific product
+                        # page: it holds images for MULTIPLE product variants
+                        # at once, and a data-pid attribute is only present on
+                        # the 3 full-size slides, missing from this product's
+                        # own thumbnails — so data-pid can't be used as the
+                        # filter either. The one marker present on every one
+                        # of this product's images — both full-size and
+                        # thumbnail — is the product_code in the filename.
+                        if product.get("product_code") and product["product_code"] not in src:
+                            continue
+                        if src.startswith("/"):
+                            src = "https://brain.com.ua" + src
+                        image_urls.append(src)
                 unique_urls = list(dict.fromkeys(image_urls))
                 product["image_urls"] = unique_urls if unique_urls else None
             except (PlaywrightError, PlaywrightTimeoutError):
@@ -284,11 +321,15 @@ def main():
             pprint(product)
 
             link = product.pop("link")
+            try:
+                obj, created = Product.objects.get_or_create(link=link)
+                for key, value in product.items():
+                    setattr(obj, key, value)
+                obj.save()
+            except DjangoDBError as e:
+                print(f"❌ Database error while saving the product: {e}")
+                return
 
-            obj, created = Product.objects.get_or_create(link=link)
-            for key, value in product.items():
-                setattr(obj, key, value)
-            obj.save()
             print("✅ Created new record in Database" if created else "🔁 Updated existing record in Database")
         except PlaywrightTimeoutError as e:
             print(f"❌ Timeout while waiting for page/element: {e}")
