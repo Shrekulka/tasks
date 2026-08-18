@@ -1,0 +1,49 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+
+# Type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environment variables (secrets/local config — не коммітиться; ..env.example коммітиться)
+.env
+*.env.local
+*.env.staging
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+._*
+Thumbs.db
+
+# Project-specific: результати прогонів парсера (генеруються, не коммітяться)
+output/
+logs/
