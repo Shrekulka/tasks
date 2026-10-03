@@ -1,0 +1,41 @@
+<article class="site-card">
+
+    <div class="site-card__top">
+        <div>
+            <h3 class="site-card__title">
+                <a href="{% url 'radar:site' site.domain %}">{{ site.title|truncatechars:70 }}</a>
+            </h3>
+
+            {% if site.url %}
+                <a class="site-card__domain"
+                   href="{{ site.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer nofollow">{{ site.domain }} ↗</a>
+            {% else %}
+                <span class="site-card__domain">{{ site.domain }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <p class="site-card__summary">
+        {{ site.summary|default:"Опис недоступний"|truncatechars:180 }}
+    </p>
+
+    {% if site.niches %}
+        <div class="site-card__tags">
+            {% for n in site.niches|slice:":3" %}
+                <a class="tag" href="{% url 'radar:catalog' %}?niche={{ n|urlencode }}">{{ n }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <footer class="site-card__meta">
+        {% if site.dr is not None %}<span title="Domain Rating">DR <strong>{{ site.dr }}</strong></span>{% endif %}
+        <span title="Дата, коли FreeSerp вперше побачив сайт робочим">Вперше live: {{ site.first_live|default:"—" }}</span>
+        <label class="compare-toggle">
+            <input type="checkbox" class="cmp" autocomplete="off" value="{{ site.domain }}">
+            <span>Порівняти</span>
+        </label>
+    </footer>
+
+</article>

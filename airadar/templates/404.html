@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Сторінку не знайдено · AI Radar{% endblock %}
+{% block content %}
+    <div class="empty-state">
+        <h1 class="page-title">404</h1>
+        <p class="section-description">Такої сторінки або такого сайту немає в датасеті.</p>
+        <a class="btn btn-primary" href="{% url 'radar:catalog' %}">До каталогу</a>
+    </div>
+{% endblock %}

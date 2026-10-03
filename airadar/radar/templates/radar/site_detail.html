@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ site.domain }} · AI Radar{% endblock %}
+{% block description %}{{ site.summary|default:site.title|truncatechars:155 }}{% endblock %}
+{% block og_title %}{{ site.title }}{% endblock %}
+{% block og_description %}{{ site.summary|default:site.title|truncatechars:155 }}{% endblock %}
+{% block content %}
+    <a href="{% url 'radar:catalog' %}" class="small">← До каталогу</a>
+    <div class="detail-panel">
+
+        <div class="eyebrow">Профіль сайту</div>
+
+        <h1 class="page-title page-title--sm">{{ site.title }}</h1>
+
+        <p class="site-card__domain">{{ site.domain }}</p>
+
+        <p class="site-card__summary">{{ site.summary|default:"Опис недоступний" }}</p>
+
+        <div class="detail-grid">
+            <div class="detail-metric">
+                <div class="detail-metric__label">Domain Rating</div>
+                <div class="detail-metric__value">
+                    {% if site.dr is None %}<span title="Для нових доменів DR ще не оцінено">—</span>{% else %}{{ site.dr }}{% endif %}
+                </div>
+            </div>
+            <div class="detail-metric">
+                <div class="detail-metric__label">Вперше live</div>
+                <div class="detail-metric__value">{{ site.first_live|default:"—" }}</div>
+            </div>
+            <div class="detail-metric">
+                <div class="detail-metric__label">Білдер / стек</div>
+                <div class="detail-metric__value">{{ site.builder|default:"—" }}</div>
+            </div>
+            <div class="detail-metric">
+                <div class="detail-metric__label">HTTP</div>
+                <div class="detail-metric__value">{{ site.http_status|default_if_none:"—" }}</div>
+            </div>
+            <div class="detail-metric">
+                <div class="detail-metric__label">TLD</div>
+                <div class="detail-metric__value">{{ site.tld|default:"—" }}</div>
+            </div>
+            <div class="detail-metric">
+                <div class="detail-metric__label">Вперше побачено</div>
+                <div class="detail-metric__value">{{ site.first_seen|default:"—" }}</div>
+            </div>
+        </div>
+
+        {% if site.niches %}
+            <div class="site-card__tags">
+                {% for n in site.niches %}
+                    <a class="tag" href="{% url 'radar:catalog' %}?niche={{ n|urlencode }}">{{ n }}</a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="hero-actions">
+            {% if site.url %}
+                <a class="btn btn-primary" href="{{ site.url }}" target="_blank" rel="noopener noreferrer nofollow">Відкрити сайт ↗</a>
+            {% endif %}
+            <a class="btn btn-outline-light" href="{% url 'radar:catalog' %}?compare={{ site.domain|urlencode }}">Додати до порівняння</a>
+        </div>
+    </div>
+
+    {% if similar %}
+        <section class="section">
+            <h2 class="section-title">Схожі сайти</h2>
+            <p class="section-description">Та сама ніша «{{ site.niches.0 }}», за спаданням DR.</p>
+            <div class="site-grid">
+                {% for site in similar %}{% include "radar/_card.html" %}{% endfor %}
+            </div>
+        </section>
+    {% endif %}
+    {% include "radar/_cmp_bar.html" %}
+{% endblock %}
+{% block scripts %}
+    <script src="{% static 'radar/catalog.js' %}"></script>
+{% endblock %}

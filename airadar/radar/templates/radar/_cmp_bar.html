@@ -1,0 +1,9 @@
+<div id="cmp-bar" class="cmp-bar d-none"
+     data-compare-url="{% url 'radar:compare' %}" data-max="{{ max_compare }}">
+    <div class="cmp-bar__info">
+        <strong id="cmp-count"></strong>
+        <span class="cmp-bar__hint">Оберіть щонайменше два сайти</span>
+    </div>
+    <a id="cmp-link" class="btn btn-primary btn-sm ms-3" href="#">Порівняти</a>
+    <button id="cmp-clear" type="button" class="btn btn-outline-secondary btn-sm ms-2">Очистити вибір</button>
+</div>

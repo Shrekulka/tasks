@@ -1,0 +1,20 @@
+<div class="results-header">
+    <div class="results-count" role="status" aria-live="polite">Знайдено <strong>{{ result.total }}</strong> сайтів</div>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'radar:export' %}?{{ export_qs }}">CSV · до 100</a>
+</div>
+{% if chips %}
+    <div class="chips" aria-label="Активні фільтри">
+        {% for c in chips %}
+            <a class="chip" href="{% url 'radar:catalog' %}{% if c.remove_qs %}?{{ c.remove_qs }}{% endif %}"
+               aria-label="Прибрати фільтр {{ c.label }}: {{ c.value }}">{{ c.label }}: {{ c.value }} <span aria-hidden="true">×</span></a>
+        {% endfor %}
+    </div>
+{% endif %}
+{% if result.sites %}
+    <div class="site-grid" id="cards">{% include "radar/_chunk.html" %}</div>
+{% else %}
+    <div class="empty-state" id="cards-empty">
+        <h3>Нічого не знайдено</h3>
+        <p class="section-description">Спробуйте змінити фільтри або розширити період. Найновіші сайти з'являються в індексі із затримкою: у «Про дані» пояснено чому.</p>
+    </div>
+{% endif %}

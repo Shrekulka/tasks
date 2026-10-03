@@ -1,0 +1,6 @@
+{% for site in result.sites %}{% include "radar/_card.html" %}{% endfor %}
+{% if result.has_more %}
+    <div class="more-wrap" data-more>
+        <a class="btn btn-outline-primary" href="{% url 'radar:catalog' %}?{{ next_qs }}">Показати ще</a>
+    </div>
+{% endif %}

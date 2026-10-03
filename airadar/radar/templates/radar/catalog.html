@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Каталог AI-сайтів · AI Radar{% endblock %}
+{% block description %}Шукайте AI-сайти за доменом, назвою чи описом. Фільтри: ніша, білдер, TLD, DR, період. Порівняння та експорт у CSV.{% endblock %}
+{% block content %}
+    <div class="catalog-heading">
+        <div>
+            <h1 class="page-title"> Каталог AI-сайтів </h1>
+            <p class="section-description"> Знаходимо сигнал серед даних FreeSerp. </p>
+        </div>
+    </div>
+
+    <form id="filters" method="get" action="{% url 'radar:catalog' %}" class="filter-panel">
+        <h2 class="filter-title"> Фільтри пошуку</h2>
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="visually-hidden" for="f-q">Пошук</label>
+                <input id="f-q" class="form-control" type="search" name="q" maxlength="100" value="{{ filters.q }}"
+                       placeholder="Пошук за доменом, назвою або описом">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small" for="f-niche">Ніша</label>
+                <select id="f-niche" class="form-select" name="niche">
+                    <option value="">Усі ніші</option>
+                    {% for n in niches %}
+                        <option value="{{ n }}" {% if n == filters.niche %}selected{% endif %}>{{ n }}</option>
+                    {% endfor %}
+                    {% if filters.niche and filters.niche not in niches %}
+                        <option value="{{ filters.niche }}" selected>{{ filters.niche }}</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small" for="f-source">Білдер / стек</label>
+                <input id="f-source" class="form-control" name="ai_source" list="source-list" maxlength="60"
+                       value="{{ filters.ai_source }}" placeholder="напр. lovable">
+                <datalist id="source-list">
+                    {% for s in sources %}<option value="{{ s }}">{% endfor %}
+                </datalist>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small" for="f-tld">TLD</label>
+                <input id="f-tld" class="form-control" name="tld" list="tld-list" maxlength="24"
+                       value="{{ filters.tld }}" placeholder="com">
+                <datalist id="tld-list">
+                    {% for t in tlds %}<option value="{{ t }}">{% endfor %}
+                </datalist>
+            </div>
+            <div class="col-3 col-md-1">
+                <label class="form-label small" for="f-dr">DR від</label>
+                <input id="f-dr" class="form-control" type="number" min="0" max="100" name="dr_min"
+                       value="{{ filters.dr_min|default_if_none:'' }}">
+            </div>
+            <div class="col-3 col-md-1">
+                <label class="form-label small" for="f-dr-max">DR до</label>
+                <input id="f-dr-max" class="form-control" type="number" min="0" max="100" name="dr_max"
+                       value="{{ filters.dr_max|default_if_none:'' }}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small" for="f-period">З'явилися</label>
+                <select id="f-period" class="form-select" name="period">
+                    {% for v, label in period_choices %}
+                        <option value="{{ v }}" {% if v == filters.period %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small" for="f-sort">Сортування</label>
+                <select id="f-sort" class="form-select" name="sort">
+                    {% for v, label in sort_choices %}
+                        <option value="{{ v }}" {% if v == filters.sort %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <button class="btn btn-primary" type="submit"> Застосувати фільтри</button>
+                <a class="btn btn-outline-secondary ms-2" href="{% url 'radar:catalog' %}"> Скинути </a>
+            </div>
+        </div>
+    </form>
+    {{ request.GET.compare|json_script:"initial-compare-data" }}
+
+    <div id="results">
+        {% include "radar/_results.html" %}
+    </div>
+    {% include "radar/_cmp_bar.html" %}
+{% endblock %}
+{% block scripts %}
+    <script src="{% static 'radar/catalog.js' %}"></script>
+{% endblock %}

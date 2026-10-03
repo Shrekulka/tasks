@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <section class="hero">
+        <div>
+            <div class="eyebrow">AI Intelligence Radar</div>
+
+            <h1 class="page-title"><span class="page-title__grad">Знаходь сигнал.<br> Ігноруй шум.</span></h1>
+
+            <p class="page-subtitle">
+                Каталог AI-сайтів з відкритого індексу FreeSerp.
+                Пошук, фільтрація, порівняння та AI-аналіз в одному місці.
+            </p>
+
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="{% url 'radar:catalog' %}">Дослідити каталог</a>
+                <a class="btn btn-outline-light" href="{% url 'radar:about' %}">Про дані</a>
+            </div>
+        </div>
+        <div class="hero-stat">
+            <div class="radar-visual" aria-hidden="true">
+                <div class="radar-circle radar-circle--1"></div>
+                <div class="radar-circle radar-circle--2"></div>
+                <div class="radar-circle radar-circle--3"></div>
+                <div class="radar-sweep"></div>
+                <span class="radar-point radar-point--1">●</span>
+                <span class="radar-point radar-point--2">●</span>
+                <span class="radar-point radar-point--3">●</span>
+                <span class="radar-core">✦</span>
+            </div>
+
+            {% if stats and stats.ai_total is not None %}
+                <span class="hero-stat__value">{{ stats.ai_total|floatformat:"0g" }}</span>
+                <span class="hero-stat__label">AI-сайтів в індексі FreeSerp</span>
+                {% if overview %}
+                    <span class="hero-stat__label">
+                        +{{ overview.last_7d|floatformat:"0g" }} за 7 днів · +{{ overview.last_30d|floatformat:"0g" }} за 30 днів
+                    </span>
+                {% endif %}
+                {% if stats.generated_at %}
+                    <span class="hero-stat__label small">Статистика від {{ stats.generated_at }} UTC
+                        {% if overview.latest_live %} · найсвіжіший AI-сайт:
+                            {{ overview.latest_live }}{% endif %}</span>
+                {% endif %}
+                {% if lag_days is not None and lag_days >= 7 %}
+                    <span class="hero-stat__label small">Нових AI-сайтів в індексі немає вже {{ lag_days }} дн.:
+                        класифікація FreeSerp відстає від індексу.</span>
+                {% endif %}
+            {% endif %}
+        </div>
+    </section>
+    {% if latest_error %}
+        {% include "radar/_error.html" %}
+    {% elif latest %}
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title"> Останні AI-сайти </h2>
+                    <p class="section-description"> Сайти, які нещодавно з'явилися в індексі. </p>
+                </div>
+                <a href="{% url 'radar:catalog' %}" class="btn btn-sm btn-outline-secondary"> Весь каталог </a>
+            </div>
+            <div class="site-grid">
+                {% for site in latest.sites %}
+                    {% include "radar/_card.html" %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+    {% if stats_error %}
+        <section class="section">
+            <div class="stats-panel"> Статистика тимчасово недоступна.</div>
+        </section>
+    {% elif stats %}
+        <section class="section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title"> Індекс FreeSerp </h2>
+                    <p class="section-description"> Ніші та DR показано для AI-сайтів; динаміка за днями охоплює весь
+                        індекс. Клік по стовпчику відкриває каталог із відповідним фільтром. </p>
+                </div>
+            </div>
+            <div class="charts-grid">
+
+                <section class="chart-panel chart-panel--wide">
+                    <div class="chart-panel__header">
+                        <div>
+                            <div class="eyebrow">Активність</div>
+                            <h3 class="chart-panel__title">Нові сайти в індексі за 30 днів (усі ніші)</h3>
+                            <p class="chart-panel__description">Це весь індекс FreeSerp, а не лише AI. Останній день (пунктир) ще не завершений.</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="dailySitesChart" role="img"
+                                aria-label="Лінійний графік: нові сайти в індексі за останні 30 днів"></canvas>
+                    </div>
+                    <details class="chart-data">
+                        <summary>Дані таблицею</summary>
+                        <table class="table table-sm">
+                            <tbody>{% for day, count, pct in stats.by_day %}
+                                <tr>
+                                    <th scope="row">{{ day }}</th>
+                                    <td>{{ count }}</td>
+                                </tr>{% endfor %}</tbody>
+                        </table>
+                    </details>
+                </section>
+
+                <section class="chart-panel">
+                    <div class="chart-panel__header">
+                        <div>
+                            <div class="eyebrow">Категорії</div>
+                            <h3 class="chart-panel__title">Популярні AI-ніші</h3>
+                        </div>
+                    </div>
+                    <div class="chart-container chart-container--bar">
+                        <canvas id="categoriesChart" role="img"
+                                aria-label="Стовпчикова діаграма: найпопулярніші AI-ніші"
+                                data-catalog-url="{% url 'radar:catalog' %}"></canvas>
+                    </div>
+                    <details class="chart-data">
+                        <summary>Дані таблицею</summary>
+                        <table class="table table-sm">
+                            <tbody>{% for name, count, pct in stats.top_niches %}
+                                <tr>
+                                    <th scope="row"><a
+                                            href="{% url 'radar:catalog' %}?niche={{ name|urlencode }}">{{ name }}</a>
+                                    </th>
+                                    <td>{{ count }}</td>
+                                </tr>{% endfor %}</tbody>
+                        </table>
+                    </details>
+                </section>
+
+                {% if overview and overview.dr_histogram %}
+                    <section class="chart-panel">
+                        <div class="chart-panel__header">
+                            <div>
+                                <div class="eyebrow">Domain Rating</div>
+                                <h3 class="chart-panel__title">Розподіл DR серед AI-сайтів</h3>
+                                <p class="chart-panel__description">Логарифмічна шкала: більшість нових сайтів має
+                                    низький DR.</p>
+                            </div>
+                        </div>
+                        <div class="chart-container chart-container--bar">
+                            <canvas id="drChart" role="img"
+                                    aria-label="Стовпчикова діаграма: розподіл DR серед AI-сайтів"
+                                    data-catalog-url="{% url 'radar:catalog' %}"></canvas>
+                        </div>
+                        <details class="chart-data">
+                            <summary>Дані таблицею</summary>
+                            <table class="table table-sm">
+                                <tbody>{% for start, count in overview.dr_histogram %}
+                                    <tr>
+                                        <th scope="row">DR від {{ start }}</th>
+                                        <td>{{ count }}</td>
+                                    </tr>{% endfor %}</tbody>
+                            </table>
+                        </details>
+                    </section>
+                {% endif %}
+
+            </div>
+        </section>
+    {% endif %}
+    {% include "radar/_cmp_bar.html" %}
+{% endblock %}
+{% block scripts %}
+    {% if stats %}
+        {{ stats.by_day|json_script:"daily-stats-data" }}
+        {{ stats.top_niches|json_script:"category-stats-data" }}
+        {% if overview %}{{ overview.dr_histogram|json_script:"dr-stats-data" }}{% endif %}
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"
+                integrity="sha384-XcdcwHqIPULERb2yDEM4R0XaQKU3YnDsrTmjACBZyfdVVqjh6xQ4/DCMd7XLcA6Y"
+                crossorigin="anonymous"></script>
+        <script src="{% static 'radar/dashboard.js' %}"></script>
+    {% endif %}
+    <script src="{% static 'radar/catalog.js' %}"></script>
+{% endblock %}

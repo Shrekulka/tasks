@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Порівняння сайтів · AI Radar{% endblock %}
+{% block head_extra %}{% if llm_enabled %}<meta name="csrf-token" content="{{ csrf_token }}">{% endif %}{% endblock %}
+{% block content %}
+    <h1 class="page-title page-title--sm mb-3">Порівняння сайтів</h1>
+    {% for d in missing %}
+        <div class="alert alert-warning">Сайт <strong>{{ d }}</strong> не знайдено в датасеті.</div>
+    {% endfor %}
+
+    {% if sites|length < 2 %}
+        <div class="alert alert-info">
+            Для порівняння потрібно щонайменше 2 сайти.
+            <a href="{% url 'radar:catalog' %}">Поверніться до каталогу</a> і оберіть ще один або два сайти.
+        </div>
+    {% else %}
+        <div class="table-responsive">
+            <div class="compare-dashboard">
+                <table class="compare-table">
+                    <thead>
+                    <tr>
+                        <th scope="col"><span class="visually-hidden">Параметр</span></th>
+                        {% for s in sites %}
+                            <th scope="col">
+                                <div class="compare-site-name">{{ s.title|truncatechars:35 }}</div>
+                                <a class="compare-site-domain" href="{% url 'radar:site' s.domain %}">{{ s.domain }}</a>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <th scope="row">{{ row.label }}</th>
+                            {% for cell in row.cells %}
+                                <td>
+                                    {% if row.field == "dr" %}
+                                        <strong class="metric-highlight{% if cell.best %} is-best{% endif %}">{{ cell.value|default_if_none:"—" }}</strong>
+                                    {% elif row.field == "summary" %}
+                                        {{ cell.value|default:"Опис недоступний"|truncatechars:300 }}
+                                    {% else %}
+                                        {{ cell.value|default_if_none:"—"|default:"—" }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if llm_enabled %}
+            <div class="verdict-panel">
+                <div class="verdict-heading">
+                    <div>
+                        <strong>AI-вердикт</strong>
+                        <div class="section-description">AI-аналіз вибраних сайтів (експериментально)</div>
+                    </div>
+                </div>
+                <button id="verdict-btn" class="btn btn-primary"
+                        data-url="{% url 'radar:verdict' %}"
+                        data-domains="{{ domains|join:',' }}">Запустити AI-аналіз</button>
+                <div id="verdict-out" aria-live="polite"></div>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+{% block scripts %}
+    {% if sites|length >= 2 %}
+        <script>
+            // Порівняння відбулося: чистимо вибір, щоб панель «Обрано…» не з'являлась на інших сторінках
+            try { sessionStorage.removeItem("airadar:compare"); } catch (e) { /* сховище недоступне */ }
+        </script>
+    {% endif %}
+    {% if llm_enabled %}<script src="{% static 'radar/verdict.js' %}"></script>{% endif %}
+{% endblock %}

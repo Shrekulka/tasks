@@ -1,0 +1,60 @@
+{% load static %}<!doctype html>
+<html lang="uk" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#070b12">
+    <title>{% block title %}AI Radar · каталог AI-сайтів з індексу FreeSerp{% endblock %}</title>
+    <meta name="description" content="{% block description %}Каталог AI-сайтів з відкритого індексу FreeSerp: пошук, фільтри за нішею, білдером і DR, порівняння та експорт у CSV.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}AI Radar{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Знаходь сигнал серед нових AI-сайтів.{% endblock %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="{% static 'radar/app.css' %}" rel="stylesheet">
+    <link rel="icon" href="{% static 'radar/favicon.svg' %}" type="image/svg+xml">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти до змісту</a>
+<header class="site-header">
+    <div class="app-shell header-inner">
+        <a class="brand" href="{% url 'radar:index' %}">
+            <span class="brand-mark" aria-hidden="true"> <span class="brand-mark__pulse"></span> ◉ </span>
+            <span class="brand-copy"> <strong>AI</strong> RADAR <small>signal intelligence</small> </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Основна навігація">
+            <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}"
+               href="{% url 'radar:index' %}"><span aria-hidden="true"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 12 19 5"/></svg></span> <span class="nav-label">Radar</span></a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'catalog' %}active{% endif %}"
+               href="{% url 'radar:catalog' %}"><span aria-hidden="true"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span> <span class="nav-label">Каталог</span></a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
+               href="{% url 'radar:about' %}"><span aria-hidden="true"><svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span> <span class="nav-label">Про дані</span></a>
+        </nav>
+        <div class="header-status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>Дані FreeSerp</span>
+        </div>
+    </div>
+</header>
+
+<main id="main" class="app-shell page-content">
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="app-shell footer-inner">
+        <span>AI Radar</span>
+        <span class="footer-separator">•</span>
+        <span> Джерело даних: <a href="https://freeserp.ai/docs.php" rel="noopener">FreeSerp API</a> </span>
+        <span class="footer-muted"> · index=sites </span>
+    </div>
+</footer>
+
+{% block scripts %}
+{% endblock %}
+</body>
+</html>
