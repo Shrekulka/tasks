@@ -1,0 +1,135 @@
+{
+  "surface_detection": {
+    "min_width": 280.0,
+    "min_height": 160.0
+  },
+  "button_detection": {
+    "min_padding_vertical": 6.0,
+    "min_padding_horizontal": 12.0,
+    "max_height": 68.0
+  },
+  "asset_detection": {
+    "max_icon_dimension": 56.0,
+    "min_accent_dimension": 12.0
+  },
+  "typography_detection": {
+    "h1_ratio_threshold": 0.85,
+    "h2_ratio_threshold": 0.65,
+    "h3_ratio_threshold": 0.45,
+    "caption_max_size": 14.0
+  },
+  "badge_detection": {
+    "min_corner_radius": 40.0,
+    "max_height": 40.0,
+    "max_words_in_text": 3
+  },
+  "reference_bg_detection": {
+    "exclude_node_types": [
+      "ASSET"
+    ],
+    "exclude_raw_types": [
+      "VECTOR",
+      "BOOLEAN_OPERATION",
+      "STAR",
+      "LINE",
+      "REGULAR_POLYGON"
+    ],
+    "allowed_blend_modes": [
+      "NORMAL",
+      "PASS_THROUGH"
+    ],
+    "gradient_penalty": 0.6,
+    "min_coverage_ratio": 0.35,
+    "min_alpha": 0.4,
+    "depth_priority_falloff": 0.02,
+    "png_fallback_resize": 64,
+    "max_opaque_color_std": 20.0,
+    "min_transparent_fraction_for_backing": 0.05,
+    "transparent_backing_max_alpha": 0.05,
+    "min_dominant_color_coverage": 0.4,
+    "min_opaque_page_coverage": 0.5
+  },
+  "responsive_detection": {
+    "decorative_name_keywords": [
+      "dust",
+      "stars",
+      "star",
+      "glow",
+      "light",
+      "blur",
+      "grid",
+      "particles",
+      "particle",
+      "sparkle",
+      "ticker",
+      "noise",
+      "background",
+      "bg",
+      "decoration",
+      "decor"
+    ],
+    "decorative_max_opacity": 0.5,
+    "decorative_score_threshold": 0.55,
+    "background_min_coverage_ratio": 0.45,
+    "content_sizing_modes": [
+      "FILL",
+      "HUG"
+    ],
+    "visual_leaf_types": [
+      "VECTOR",
+      "ELLIPSE",
+      "LINE",
+      "STAR",
+      "REGULAR_POLYGON",
+      "RECTANGLE",
+      "FRAME"
+    ],
+    "weights": {
+      "name_keyword": 0.35,
+      "low_opacity": 0.25,
+      "effects": 0.15,
+      "large_coverage": 0.15,
+      "visual_leaf": 0.1
+    }
+  },
+  "accent_color_detection": {
+    "sample_top_k": 8,
+    "resize_dim": 48,
+    "min_alpha": 0.5,
+    "min_saturation": 0.15
+  },
+  "card_detection": {
+    "min_width": 180,
+    "min_height": 100,
+    "min_children": 2
+  },
+  "font_weight_resolution": {
+    "fallback_weight": 400,
+    "keyword_weight_map": {
+      "thin": 100,
+      "hairline": 100,
+      "extralight": 200,
+      "ultralight": 200,
+      "extra light": 200,
+      "light": 300,
+      "regular": 400,
+      "normal": 400,
+      "book": 400,
+      "medium": 500,
+      "semibold": 600,
+      "demibold": 600,
+      "semi bold": 600,
+      "demi bold": 600,
+      "bold": 700,
+      "extrabold": 800,
+      "ultrabold": 800,
+      "extra bold": 800,
+      "black": 900,
+      "heavy": 900
+    }
+  },
+  "token_confidence": {
+    "min_surface_canvas_distance": 0.06,
+    "low_confidence_accent_alpha": 0.5
+  }
+}

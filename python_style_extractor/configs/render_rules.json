@@ -1,0 +1,77 @@
+{
+  "card_border_width": 1.0,
+  "font_fallbacks": [
+    "system-ui",
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "sans-serif"
+  ],
+  "role_color_map": {
+    "heading_h1": "text_primary",
+    "heading_h2": "text_primary",
+    "heading_h3": "text_primary",
+    "stat": "text_primary",
+    "button_label": "text_primary",
+    "caption": "text_muted",
+    "__default__": "text_secondary"
+  },
+  "typography_role_map": {
+    "heading_h1": "h1",
+    "heading_h2": "h2",
+    "heading_h3": "h3",
+    "body": "body",
+    "caption": "caption",
+    "button_label": "button",
+    "stat": "stat",
+    "__default__": "body"
+  },
+  "blur": {
+    "layer_radius_factor": 0.5,
+    "background_radius_factor": 0.5
+  },
+  "drop_shadow": {
+    "radius_factor": 1.0
+  },
+  "button_padding": {
+    "top": 12.0,
+    "bottom": 12.0,
+    "left": 24.0,
+    "right": 24.0
+  },
+  "figma_blend_mode_to_css": {
+    "DARKEN": "darken",
+    "MULTIPLY": "multiply",
+    "COLOR_BURN": "color-burn",
+    "LINEAR_BURN": "multiply",
+    "LIGHTEN": "lighten",
+    "SCREEN": "screen",
+    "COLOR_DODGE": "color-dodge",
+    "LINEAR_DODGE": "lighten",
+    "OVERLAY": "overlay",
+    "SOFT_LIGHT": "soft-light",
+    "HARD_LIGHT": "hard-light",
+    "DIFFERENCE": "difference",
+    "EXCLUSION": "exclusion",
+    "HUE": "hue",
+    "SATURATION": "saturation",
+    "COLOR": "color",
+    "LUMINOSITY": "luminosity"
+  },
+  "responsive": {
+    "content_padding_token": "md",
+    "content_gap_token": "md"
+  },
+  "component_style_transfer": {
+    "button_fill_min_lightness_gap": 0.25,
+    "button_border_min_alpha_gap": 0.2,
+    "card_glass_alpha_threshold": 0.15,
+    "min_reliable_accent_confidence": 0.6,
+    "accent_token_priority": [
+      "primary",
+      "accent",
+      "secondary"
+    ],
+    "badge_min_visible_alpha": 0.55
+  }
+}

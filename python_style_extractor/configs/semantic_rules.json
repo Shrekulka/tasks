@@ -1,0 +1,91 @@
+{
+  "regex_patterns": {
+    "stat": "^\\(?[+\\-=]?\\$?\\d+([.,]\\d+)?([+\\-]\\d+)?\\)?(%|k|K|M|B|X|x|y|Y|\\+)?$"
+  },
+  "button_keywords": [
+    "btn",
+    "button",
+    "cta",
+    "action",
+    "submit",
+    "start",
+    "начать",
+    "подробнее",
+    "войти",
+    "регистрация",
+    "купить",
+    "узнать"
+  ],
+  "button_keyword_matching": {
+    "max_words_in_name": 4,
+    "max_words_in_text": 4
+  },
+  "heading_keywords": [
+    "title",
+    "heading",
+    "header",
+    "hero_text",
+    "заголовок"
+  ],
+  "card_keywords": [
+    "card",
+    "item",
+    "box",
+    "feature",
+    "block",
+    "карточка"
+  ],
+  "fallback": {
+    "semantic_role": "body",
+    "html_tag": "p",
+    "confidence": 0.5
+  },
+  "stat_detection": {
+    "score_threshold": 0.6,
+    "min_visible_alpha": 0.65,
+    "min_h1_size_ratio": 0.28,
+    "min_font_weight": 500,
+    "name_keywords": [
+      "stat",
+      "stats",
+      "metric",
+      "metrics",
+      "number",
+      "value",
+      "percent",
+      "percentage",
+      "counter",
+      "score",
+      "result",
+      "kpi"
+    ],
+    "weights": {
+      "regex": 0.35,
+      "visibility": 0.2,
+      "typography": 0.2,
+      "font_weight": 0.1,
+      "name_hint": 0.15
+    },
+    "penalties": {
+      "strong_decorative": 0.5,
+      "weak_decorative": 0.2
+    }
+  },
+  "decorative_text_detection": {
+    "low_alpha_threshold": 0.35,
+    "secondary_alpha_threshold": 0.65,
+    "small_area_ratio": 0.005,
+    "name_keywords": [
+      "decor",
+      "decoration",
+      "background",
+      "bg",
+      "ticker",
+      "watermark",
+      "noise",
+      "pattern",
+      "particle",
+      "particles"
+    ]
+  }
+}

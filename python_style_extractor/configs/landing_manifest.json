@@ -1,0 +1,97 @@
+{
+  "project_name": "FXIFY x Fxology Showcase",
+  "style_source": {
+    "id": "fxify_brand_style",
+    "provider": "figma",
+    "file_key": "tIsKpTW3zj9Hg09adBX5ZH",
+    "node_id": "1122:6758"
+  },
+  "sections": [
+    {
+      "id": "fxify_roadmap",
+      "name": "FXIFY Roadmap Section",
+      "source": {
+        "provider": "figma",
+        "file_key": "tIsKpTW3zj9Hg09adBX5ZH",
+        "node_id": "1122:6758"
+      },
+      "transform": {
+        "mode": "native",
+        "preservation": {
+          "preserve_composition": true,
+          "preserve_content": true,
+          "preserve_assets": true,
+          "preserve_geometry": true,
+          "preserve_component_structure": true,
+          "transfer_typography": true,
+          "transfer_component_style": true,
+          "transfer_colors": true,
+          "transfer_effects": true
+        },
+        "token_overrides": {}
+      }
+    },
+    {
+      "id": "fxology_features",
+      "name": "Fxology Feature Block",
+      "source": {
+        "provider": "figma",
+        "file_key": "DOHrSfiqMosu9hdVeW6CEd",
+        "node_id": "2196:13914"
+      },
+      "transform": {
+        "mode": "style_transfer",
+        "preservation": {
+          "preserve_composition": true,
+          "preserve_content": true,
+          "preserve_assets": true,
+          "preserve_dimensions": true,
+          "preserve_components": true
+        },
+        "token_overrides": {}
+      }
+    }
+  ],
+  "render": {
+    "renderer": "web",
+    "responsive": true
+  },
+  "llm": {
+    "enabled": true,
+    "required": false,
+    "provider": "openrouter",
+    "base_url": "https://openrouter.ai/api/v1",
+    "api_key_env": "OPENROUTER_API_KEYS",
+    "models": [
+      "nex-agi/nex-n2.5-pro:free",
+      "google/gemma-4-31b-it:free",
+      "cohere/north-mini-code:free"
+    ],
+    "temperature": 0.0,
+    "supports_json_mode": false,
+    "timeout_seconds": 60
+  },
+  "qa": {
+    "diff_threshold": 0.18,
+    "ssim_threshold": 0.18,
+    "fail_on_console_error": true,
+    "fail_on_overflow": true,
+    "viewports": [
+      {
+        "name": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      }
+    ]
+  }
+}

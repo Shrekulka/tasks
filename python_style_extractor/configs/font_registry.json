@@ -1,0 +1,18 @@
+{
+  "PP Mori": {
+    "source": "google",
+    "family": "Plus Jakarta Sans",
+    "import_url": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+  },
+  "Aventa": {
+    "source": "google",
+    "family": "Montserrat",
+    "import_url": "https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap",
+    "weight_offset": -100
+},
+  "Inter": {
+    "source": "google",
+    "family": "Inter",
+    "import_url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+  }
+}

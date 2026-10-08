@@ -1,0 +1,12 @@
+requests
+environs
+pydantic
+langchain-core
+langchain-ollama
+langchain-anthropic
+playwright
+langchain-openai
+pillow
+pytest
+scikit-image
+numpy

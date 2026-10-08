@@ -1,0 +1,51 @@
+{
+  "color_extraction": {
+    "min_bg_vote_share": 0.15,
+    "sample_resize": 100,
+    "sample_top_k": 5,
+    "min_sample_alpha": 0.6
+  },
+  "visual_qa_ai": {
+    "enabled": true,
+    "required": false,
+    "enforce": false,
+    "gate_min_confidence": 0.9,
+    "gate_min_severity": "high",
+    "target_viewport": "desktop",
+    "provider": "openai_compatible",
+    "api_key_env": "OPENROUTER_API_KEYS",
+    "base_url": "https://openrouter.ai/api/v1",
+    "models": [
+      "inclusionai/ling-3.0-flash-vl:free"
+    ],
+    "temperature": 0.0,
+    "timeout_seconds": 90,
+    "supports_json_mode": false
+  },
+  "visual_regression": {
+    "enforce": true,
+    "diff_threshold": 0.18,
+    "ssim_threshold": 0.18,
+    "mae_threshold_non_text": 0.18,
+    "ssim_threshold_non_text": 0.80,
+    "ssim_threshold_non_text_worst_subblock": 0.92,
+    "ssim_threshold_text": 0.62,
+    "ssim_threshold_non_text_dark": 0.55,
+    "ssim_threshold_raster_composite": 0.55
+  },
+  "cache_retention": {
+    "keep_figma_cache_versions": 3,
+    "keep_output_runs": 10
+  },
+  "figma_client": {
+    "default_retry_after_seconds": 10,
+    "max_cooldown_wait_seconds": 60.0
+  },
+  "llm": {
+    "max_text_chars_sent": 80,
+    "client_max_retries": 1
+  },
+  "typography_fallback": {
+    "body_size_bonus_over_caption": 2.0
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "figma": {
+    "api_base_url": "https://api.figma.com/v1",
+    "timeout_seconds": 30,
+    "max_retries": 3,
+    "backoff_factor": 2,
+    "export_scale": 1
+  },
+  "colors": {
+    "canvas": "#0b0d14",
+    "surface": "#121624",
+    "surface_elevated": "#1a1f33",
+    "primary": "#2563eb",
+    "secondary": "#38bdf8",
+    "text_primary": "#ffffff",
+    "text_secondary": "#94a3b8",
+    "text_muted": "#64748b",
+    "border": "rgba(255, 255, 255, 0.08)",
+    "accent": "#3b82f6"
+  },
+  "typography": {
+    "primary_font": "Inter",
+    "scale": {
+      "h1": { "size": 48.0, "weight": 700, "line_height_percent": 115.0, "letter_spacing": -0.02 },
+      "h2": { "size": 36.0, "weight": 700, "line_height_percent": 120.0, "letter_spacing": -0.01 },
+      "h3": { "size": 24.0, "weight": 600, "line_height_percent": 130.0, "letter_spacing": 0.0 },
+      "body": { "size": 16.0, "weight": 400, "line_height_percent": 150.0, "letter_spacing": 0.0 },
+      "button": { "size": 15.0, "weight": 600, "line_height_percent": 120.0, "letter_spacing": 0.01 },
+      "caption": { "size": 13.0, "weight": 400, "line_height_percent": 140.0, "letter_spacing": 0.0 },
+      "stat": { "size": 44.0, "weight": 800, "line_height_percent": 110.0, "letter_spacing": -0.02 }
+    }
+  },
+  "radii": {
+    "button": 8.0,
+    "card": 16.0,
+    "badge": 999.0,
+    "input": 8.0,
+    "section": 0.0
+  },
+  "spacing": {
+    "xs": 4.0,
+    "sm": 8.0,
+    "md": 16.0,
+    "lg": 24.0,
+    "xl": 48.0
+  }
+}
