@@ -204,3 +204,19 @@ cython_debug/
 
 .idea/
 staticfiles/
+
+# IDE and operating system files
+**/.idea/
+Thumbs.db
+
+# Python generated files and caches
+*.pyo
+.venv/
+.ruff_cache/
+
+# Local environment files
+.env.*
+!.env.example
+
+# Keep the local forest_advice_bot workflow out of Git
+forest_advice_bot/.github/
