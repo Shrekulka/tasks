@@ -1,0 +1,18 @@
+# Всё, что не должно попадать в Docker-образ (меньше размер, нет секретов)
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+logs
+archive
+docs/dialogue
+.idea
+.vscode
+.DS_Store

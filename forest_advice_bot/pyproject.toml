@@ -1,0 +1,23 @@
+# Настройки инструментов разработки. Сам проект как пакет не публикуется.
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# E, W — стиль pycodestyle; F — ошибки (неиспользуемые импорты и переменные);
+# I — порядок импортов; B — типичные баги; UP — современный синтаксис Python;
+# SIM — упрощения кода; ASYNC — ошибки в async-коде.
+# Правила RUF не включаем: они ругаются на кириллические буквы, похожие на латинские.
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "ASYNC"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+# async-тесты запускаются без отдельной метки @pytest.mark.asyncio
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: тесты, которым нужен настоящий PostgreSQL (нужна переменная TEST_DATABASE_URL)",
+    "network: тесты, которые ходят в настоящий LLM-провайдер (по умолчанию пропускаются)",
+]

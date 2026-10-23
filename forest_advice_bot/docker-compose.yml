@@ -1,0 +1,48 @@
+services:
+  db:
+    # PostgreSQL 16 с pgvector 0.8.7.
+    # Версия зафиксирована для воспроизводимой сборки.
+    image: pgvector/pgvector:0.8.7-pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Задайте POSTGRES_DB в файле .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Задайте POSTGRES_USER в файле .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в файле .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # -h 127.0.0.1 важен: при первом создании базы PostgreSQL сначала запускает временный
+      # сервер, который слушает только внутренний сокет. Проверка по TCP не примет его за
+      # готовый основной сервер. Двойной $$ нужен, чтобы подстановку сделал контейнер.
+      test: [ "CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    # Порт 5432 наружу НЕ публикуем: базе нужен доступ только у бота внутри сети compose.
+
+  bot:
+    build:
+      context: .
+      args:
+        # Модель эмбеддингов скачивается в образ при сборке: берём то же имя, что в .env.
+        EMBEDDING_MODEL: ${EMBEDDING_MODEL:-intfloat/multilingual-e5-base}
+    restart: unless-stopped
+    stop_grace_period: 11m
+    env_file: .env
+    environment:
+      # Внутри compose база называется db, это важнее POSTGRES_HOST=localhost из .env.
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      ARCHIVE_DIR: ${ARCHIVE_CONTAINER_DIR:-/app/archive}
+    volumes:
+      - type: bind
+        source: ${ARCHIVE_HOST_DIR:-./samples/archive}
+        target: ${ARCHIVE_CONTAINER_DIR:-/app/archive}
+        read_only: true
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

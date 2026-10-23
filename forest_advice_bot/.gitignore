@@ -1,0 +1,29 @@
+# --- Секреты: НИКОГДА не коммитим ---
+.env
+.env.*
+!.env.example
+
+# --- Документы заказчицы (права на публикацию не оговорены) ---
+# Только корневая папка: samples/archive/ с вымышленными документами обязана попасть в git.
+/archive/
+
+# --- Логи и данные ---
+logs/
+*.log
+
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Редакторы и ОС ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
